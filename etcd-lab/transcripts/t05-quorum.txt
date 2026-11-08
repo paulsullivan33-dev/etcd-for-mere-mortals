@@ -1,0 +1,56 @@
+$ ./drivers/t05-quorum.sh
+
+=== baseline: all three members up ===
+127.0.0.1:18085 is healthy: successfully committed proposal: took = 58.976605ms
+127.0.0.1:18086 is healthy: successfully committed proposal: took = 107.24759ms
+127.0.0.1:18087 is healthy: successfully committed proposal: took = 124.72721ms
+OK
+services/quorum-check/state
+before-any-failure
+
+=== stop ONE member (m3) ===
+stopped m3 pid 167624
+127.0.0.1:18086 is healthy: successfully committed proposal: took = 72.699318ms
+127.0.0.1:18085 is healthy: successfully committed proposal: took = 72.97395ms
+OK
+put with 2 of 3 up: OK in 95ms
+services/quorum-check/state
+one-member-down
+
+=== stop a SECOND member (m2): only 1 of 3 remains, no majority ===
+stopped m2 pid 167613
+endpoint health for the survivor, m1 alone:
+{"level":"warn","ts":"2026-11-07T21:50:12.550577Z","logger":"client","caller":"v3/retry_interceptor.go:68","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0x9cbe85d5800/127.0.0.1:18085","peer":"Peer{Addr: '127.0.0.1:18085', LocalAddr: '127.0.0.1:37908', AuthInfo: 'insecure'}","method":"/etcdserverpb.KV/Range","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = context deadline exceeded"}
+127.0.0.1:18085 is unhealthy: failed to commit proposal: context deadline exceeded
+Error: unhealthy cluster
+(health check failed, exit 1)
+attempt a WRITE with a 5 second command timeout:
+{"level":"warn","ts":"2026-11-07T21:50:17.638353Z","logger":"etcd-client","caller":"v3/retry_interceptor.go:68","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0x2f3d808d9a00/127.0.0.1:18085","peer":"Peer{Addr: '127.0.0.1:18085', LocalAddr: '127.0.0.1:59288', AuthInfo: 'insecure'}","method":"/etcdserverpb.KV/Put","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = stream terminated by RST_STREAM with error code: CANCEL"}
+Error: context deadline exceeded
+(put exit 1)
+attempt a READ with a 5 second command timeout:
+{"level":"warn","ts":"2026-11-07T21:50:22.722773Z","logger":"etcd-client","caller":"v3/retry_interceptor.go:68","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0x3c95e83b4800/127.0.0.1:18085","peer":"Peer{Addr: '127.0.0.1:18085', LocalAddr: '127.0.0.1:59298', AuthInfo: 'insecure'}","method":"/etcdserverpb.KV/Range","attempt":0,"error":"rpc error: code = DeadlineExceeded desc = stream terminated by RST_STREAM with error code: CANCEL"}
+Error: context deadline exceeded
+(get exit 1)
+
+=== bring both members back ===
+started m2 pid 170077 client 127.0.0.1:18086 peer 127.0.0.1:18186 state existing
+started m3 pid 170082 client 127.0.0.1:18087 peer 127.0.0.1:18187 state existing
+all healthy again after 0s
+127.0.0.1:18087 is healthy: successfully committed proposal: took = 5.892679ms
+127.0.0.1:18085 is healthy: successfully committed proposal: took = 93.285037ms
+127.0.0.1:18086 is healthy: successfully committed proposal: took = 138.38109ms
+┌─────────────────┬──────────────────┬─────────┬─────────────────┬─────────┬────────┬───────────────────────┬────────┬───────────┬────────────┬───────────┬────────────┬────────────────────┬────────┬──────────────────────────┬───────────────────┐
+│    ENDPOINT     │        ID        │ VERSION │ STORAGE VERSION │ DB SIZE │ IN USE │ PERCENTAGE NOT IN USE │ QUOTA  │ IS LEADER │ IS LEARNER │ RAFT TERM │ RAFT INDEX │ RAFT APPLIED INDEX │ ERRORS │ DOWNGRADE TARGET VERSION │ DOWNGRADE ENABLED │
+├─────────────────┼──────────────────┼─────────┼─────────────────┼─────────┼────────┼───────────────────────┼────────┼───────────┼────────────┼───────────┼────────────┼────────────────────┼────────┼──────────────────────────┼───────────────────┤
+│ 127.0.0.1:18085 │ 129ffdbf00b38533 │   3.7.3 │           3.7.0 │   25 kB │  20 kB │                   17% │ 2.1 GB │      true │      false │         4 │         51 │                 51 │        │                          │             false │
+│ 127.0.0.1:18086 │ 3fd60f2804cfb79c │   3.7.3 │           3.7.0 │   25 kB │  20 kB │                   17% │ 2.1 GB │     false │      false │         4 │         51 │                 51 │        │                          │             false │
+│ 127.0.0.1:18087 │ cdcfd8c055b0177a │   3.7.3 │           3.7.0 │   25 kB │  20 kB │                   17% │ 2.1 GB │     false │      false │         4 │         51 │                 51 │        │                          │             false │
+└─────────────────┴──────────────────┴─────────┴─────────────────┴─────────┴────────┴───────────────────────┴────────┴───────────┴────────────┴───────────┴────────────┴────────────────────┴────────┴──────────────────────────┴───────────────────┘
+the value written while one member was down is still there:
+services/quorum-check/state
+one-member-down
+and new writes work again:
+OK
+services/quorum-check/state
+recovered

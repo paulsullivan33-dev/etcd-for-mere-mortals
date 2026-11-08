@@ -1,0 +1,37 @@
+$ ./clean.sh
+stopped m1 pid 167353
+stopped m2 pid 167362
+stopped m3 pid 167371
+data and pid files removed; logs kept in /home/hatch/workspace/etcd-for-mere-mortals/etcd-lab/logs
+
+$ ./start-cluster.sh
+started m1 pid 167605 client 127.0.0.1:18085 peer 127.0.0.1:18185 state new
+started m2 pid 167613 client 127.0.0.1:18086 peer 127.0.0.1:18186 state new
+started m3 pid 167624 client 127.0.0.1:18087 peer 127.0.0.1:18187 state new
+all three endpoints healthy after 0s
+127.0.0.1:18085 is healthy: successfully committed proposal: took = 12.456294ms
+127.0.0.1:18086 is healthy: successfully committed proposal: took = 12.492549ms
+127.0.0.1:18087 is healthy: successfully committed proposal: took = 12.547511ms
+
+$ etcdctl member list -w table
+┌──────────────────┬─────────┬──────┬────────────────────────┬────────────────────────┬────────────┐
+│        ID        │ STATUS  │ NAME │       PEER ADDRS       │      CLIENT ADDRS      │ IS LEARNER │
+├──────────────────┼─────────┼──────┼────────────────────────┼────────────────────────┼────────────┤
+│ 129ffdbf00b38533 │ started │   m1 │ http://127.0.0.1:18185 │ http://127.0.0.1:18085 │      false │
+│ 3fd60f2804cfb79c │ started │   m2 │ http://127.0.0.1:18186 │ http://127.0.0.1:18086 │      false │
+│ cdcfd8c055b0177a │ started │   m3 │ http://127.0.0.1:18187 │ http://127.0.0.1:18087 │      false │
+└──────────────────┴─────────┴──────┴────────────────────────┴────────────────────────┴────────────┘
+
+$ etcdctl endpoint status -w table
+┌─────────────────┬──────────────────┬─────────┬─────────────────┬─────────┬────────┬───────────────────────┬────────┬───────────┬────────────┬───────────┬────────────┬────────────────────┬────────┬──────────────────────────┬───────────────────┐
+│    ENDPOINT     │        ID        │ VERSION │ STORAGE VERSION │ DB SIZE │ IN USE │ PERCENTAGE NOT IN USE │ QUOTA  │ IS LEADER │ IS LEARNER │ RAFT TERM │ RAFT INDEX │ RAFT APPLIED INDEX │ ERRORS │ DOWNGRADE TARGET VERSION │ DOWNGRADE ENABLED │
+├─────────────────┼──────────────────┼─────────┼─────────────────┼─────────┼────────┼───────────────────────┼────────┼───────────┼────────────┼───────────┼────────────┼────────────────────┼────────┼──────────────────────────┼───────────────────┤
+│ 127.0.0.1:18085 │ 129ffdbf00b38533 │   3.7.3 │           3.7.0 │   20 kB │  16 kB │                   20% │ 2.1 GB │     false │      false │         2 │         14 │                 14 │        │                          │             false │
+│ 127.0.0.1:18086 │ 3fd60f2804cfb79c │   3.7.3 │           3.7.0 │   20 kB │  16 kB │                   20% │ 2.1 GB │      true │      false │         2 │         14 │                 14 │        │                          │             false │
+│ 127.0.0.1:18087 │ cdcfd8c055b0177a │   3.7.3 │           3.7.0 │   20 kB │  16 kB │                   20% │ 2.1 GB │     false │      false │         2 │         14 │                 14 │        │                          │             false │
+└─────────────────┴──────────────────┴─────────┴─────────────────┴─────────┴────────┴───────────────────────┴────────┴───────────┴────────────┴───────────┴────────────┴────────────────────┴────────┴──────────────────────────┴───────────────────┘
+
+$ etcdctl endpoint health
+127.0.0.1:18086 is healthy: successfully committed proposal: took = 70.911657ms
+127.0.0.1:18087 is healthy: successfully committed proposal: took = 102.063475ms
+127.0.0.1:18085 is healthy: successfully committed proposal: took = 169.539528ms

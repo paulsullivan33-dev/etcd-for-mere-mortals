@@ -1,0 +1,19 @@
+$ etcd --version  (tarball etcd-v3.7.3-linux-amd64.tar.gz from github.com/etcd-io/etcd/releases/download/v3.7.3/)
+etcd Version: 3.7.3
+Git SHA: 0a173d0
+Go Version: go1.26.10
+Go OS/Arch: linux/amd64
+
+$ etcdctl version
+etcdctl version: 3.7.3
+API version: 3.7
+
+$ etcdutl version
+etcdutl version: 3.7.3
+API version: 3.7
+
+$ sha256sum of tarball (as downloaded)
+5dfa9cc3b3ce3b4b491fbcc2057d3daa166bcc6676f743fcd20f8e5760cb9775  /home/hatch/workspace/.batch-351-363/scratch-etcd/etcd-v3.7.3-linux-amd64.tar.gz
+
+$ file bin/etcd
+bin/etcd: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), statically linked, Go BuildID=LkkfAsUpzBiecNJMqvSH/zhxjjzAOlkWCQqzvqpVP/NdqA1tZciPBnuSP45P0Y/yDxQRBhiZuw6qfF6kZE1, BuildID[sha1]=7c4a6e70ad7f3a1931bce442c6e0df37badf6f6e, stripped

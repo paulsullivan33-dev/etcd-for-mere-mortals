@@ -1,0 +1,30 @@
+$ ./drivers/t04-lease.sh
+PART A - revoke by hand
+lease grant 30 -> lease 0533a1b7fc50e514 granted with TTL(30s)
+OK
+attached: put services/heartbeat/node-a alive --lease=0533a1b7fc50e514
+services/heartbeat/node-a
+alive
+lease 0533a1b7fc50e514 granted with TTL(30s), remaining(29s), attached keys([services/heartbeat/node-a])
+lease 0533a1b7fc50e514 revoked
+after revoke, get returns:
+(empty above = key gone, exit 0)
+
+PART B - let a 10 second lease expire
+lease grant 10 -> lease 0533a1b7fc50e51a granted with TTL(10s)
+OK
+attached: put services/heartbeat/node-b alive --lease=0533a1b7fc50e51a
+services/heartbeat/node-b
+alive
+waiting for expiry, polling once a second (start epoch 1794088177)...
+  t+0s: still alive
+  t+2s: still alive
+  t+3s: still alive
+  t+4s: still alive
+  t+5s: still alive
+  t+6s: still alive
+  t+7s: still alive
+  t+8s: still alive
+  t+9s: still alive
+key gone after 10s
+lease 0533a1b7fc50e51a already expired

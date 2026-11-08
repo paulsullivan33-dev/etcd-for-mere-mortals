@@ -1,0 +1,49 @@
+$ write the same key five times, watching its version climb
+put one
+ header revision 18  create_rev 18  mod_rev 18  version 1
+put two
+ header revision 19  create_rev 18  mod_rev 19  version 2
+put three
+ header revision 20  create_rev 18  mod_rev 20  version 3
+put four
+ header revision 21  create_rev 18  mod_rev 21  version 4
+put five
+ header revision 22  create_rev 18  mod_rev 22  version 5
+
+$ current revision from a plain get (header)
+22
+create_revision of the key = 18 ; cluster revision now = 22
+
+$ read at the create revision BEFORE compaction (--rev)
+services/compaction-demo/value
+one
+
+$ etcdctl compact 22
+compacted revision 22
+
+$ read at the old revision AFTER compaction
+{"level":"warn","ts":"2026-11-07T21:50:43.346817Z","logger":"etcd-client","caller":"v3/retry_interceptor.go:68","msg":"retrying of unary invoker failed","target":"etcd-endpoints://0x3cd2f4164400/127.0.0.1:18085","peer":"Peer{Addr: '127.0.0.1:18085', LocalAddr: '127.0.0.1:47340', AuthInfo: 'insecure'}","method":"/etcdserverpb.KV/Range","attempt":0,"error":"rpc error: code = OutOfRange desc = etcdserver: mvcc: required revision has been compacted"}
+Error: etcdserver: mvcc: required revision has been compacted
+(exit 1)
+
+$ the current value is untouched
+services/compaction-demo/value
+five
+
+$ endpoint status before defrag
+│    ENDPOINT     │        ID        │ VERSION │ STORAGE VERSION │ DB SIZE │ IN USE │ PERCENTAGE NOT IN USE │ QUOTA  │ IS LEADER │ IS LEARNER │ RAFT TERM │ RAFT INDEX │ RAFT APPLIED INDEX │ ERRORS │ DOWNGRADE TARGET VERSION │ DOWNGRADE ENABLED │
+│ 127.0.0.1:18085 │ 129ffdbf00b38533 │   3.7.3 │           3.7.0 │   25 kB │  20 kB │                   17% │ 2.1 GB │      true │      false │         4 │         58 │                 58 │        │                          │             false │
+
+$ defrag all three endpoints
+Finished defragmenting etcd member[127.0.0.1:18085]. took 219.085357ms
+Finished defragmenting etcd member[127.0.0.1:18086]. took 204.890134ms
+Finished defragmenting etcd member[127.0.0.1:18087]. took 301.749382ms
+
+$ endpoint status after defrag
+┌─────────────────┬──────────────────┬─────────┬─────────────────┬─────────┬────────┬───────────────────────┬────────┬───────────┬────────────┬───────────┬────────────┬────────────────────┬────────┬──────────────────────────┬───────────────────┐
+│    ENDPOINT     │        ID        │ VERSION │ STORAGE VERSION │ DB SIZE │ IN USE │ PERCENTAGE NOT IN USE │ QUOTA  │ IS LEADER │ IS LEARNER │ RAFT TERM │ RAFT INDEX │ RAFT APPLIED INDEX │ ERRORS │ DOWNGRADE TARGET VERSION │ DOWNGRADE ENABLED │
+├─────────────────┼──────────────────┼─────────┼─────────────────┼─────────┼────────┼───────────────────────┼────────┼───────────┼────────────┼───────────┼────────────┼────────────────────┼────────┼──────────────────────────┼───────────────────┤
+│ 127.0.0.1:18085 │ 129ffdbf00b38533 │   3.7.3 │           3.7.0 │   20 kB │  12 kB │                   40% │ 2.1 GB │      true │      false │         4 │         58 │                 58 │        │                          │             false │
+│ 127.0.0.1:18086 │ 3fd60f2804cfb79c │   3.7.3 │           3.7.0 │   20 kB │  12 kB │                   40% │ 2.1 GB │     false │      false │         4 │         58 │                 58 │        │                          │             false │
+│ 127.0.0.1:18087 │ cdcfd8c055b0177a │   3.7.3 │           3.7.0 │   20 kB │  12 kB │                   40% │ 2.1 GB │     false │      false │         4 │         58 │                 58 │        │                          │             false │
+└─────────────────┴──────────────────┴─────────┴─────────────────┴─────────┴────────┴───────────────────────┴────────┴───────────┴────────────┴───────────┴────────────┴────────────────────┴────────┴──────────────────────────┴───────────────────┘

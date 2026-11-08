@@ -1,0 +1,58 @@
+The lab — one release tarball, three real members, one machine
+====================================================================
+
+The lab is etcd as its project ships it: the official release
+tarball etcd-v3.7.3-linux-amd64.tar.gz from the etcd GitHub
+releases (SHA-256 in criteria.md), unpacked under the lab's
+own bin/ folder on the build machine (an Ubuntu 24.04
+sandbox) rather than installed system-wide. The three
+binaries (etcd, etcdctl, etcdutl) are statically linked Go
+programs. The binaries were removed from the finished
+checkout to keep it small; etcd-lab/bin/README.txt records
+what belonged there and the scripts find them at those paths.
+
+  * The cluster (etcd-lab/*.sh): three members from the one
+    binary — m1, m2, m3 — each with its own data directory
+    under etcd-lab/data/, client ports 127.0.0.1:18085-18087,
+    peer ports 127.0.0.1:18185-18187 (client port + 100),
+    cluster token etcd-lab-token. start-member.sh picks
+    --initial-cluster-state new or existing by whether the
+    data directory already exists, which is what makes the
+    quorum chapter's restarts honest. stop-member.sh stops
+    by the pid file recorded at start. clean.sh stops
+    everything and wipes the data.
+
+  * Fixtures: fictional service-discovery data only. Three
+    invented services under services/ (web-frontend, cache,
+    billing-worker) registering addresses under the reserved
+    .example.test domain; heartbeat keys under
+    services/heartbeat/; a quorum-check key; a compaction
+    demo key. No real service, network or organisation.
+
+  * Driver scripts (etcd-lab/drivers/): t03-watch.sh (watch
+    in the background, changes in the foreground),
+    t04-lease.sh (revoke by hand, then a 10s lease timed by a
+    1-second polling loop), t05-quorum.sh (stop one member,
+    stop a second, attempt write and read with 5s timeouts,
+    restart both, verify recovery).
+
+  * Every claim's evidence (etcd-lab/transcripts/):
+    t00 version + checksum + command list; t01 scripted
+    bring-up, member list, one leader, three healthy;
+    t02 put/get/delete, revision numbers 4/2/2/1 becoming
+    5/2/5/2, prefix read, cross-member read; t03 watch
+    PUT/PUT/DELETE; t04 lease revoke and 10s measured expiry;
+    t05 quorum (2 of 3 writes in 95ms; 1 of 3 refuses reads
+    and writes; recovery, term 2 to 4); t06 snapshot save
+    (25 kB, revision 17, 3 keys) + etcdutl status + restore
+    to a fresh directory; t07 compaction (read at rev 18
+    works, compact 22, same read fails, defrag 25 kB to
+    20 kB); t08 move-leader (two ID spellings refused,
+    bare hex works, term 4 to 5).
+
+  * Two findings kept on record: ETCDCTL_API=3, cargo-culted
+    from older tutorials, is an unrecognized variable in
+    3.7.3 and warned on every command until removed; and
+    move-leader accepts only the bare hexadecimal member ID
+    — both the 0x-prefixed and decimal forms were refused,
+    verbatim, in t08.

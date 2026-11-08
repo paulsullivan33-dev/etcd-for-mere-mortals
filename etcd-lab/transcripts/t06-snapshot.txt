@@ -1,0 +1,32 @@
+$ etcdctl snapshot save snapshots/lab-snapshot.db
+{"level":"info","ts":"2026-11-07T21:50:30.538401Z","caller":"snapshot/v3_snapshot.go:83","msg":"created temporary db file","path":"snapshots/lab-snapshot.db.part"}
+{"level":"info","ts":"2026-11-07T21:50:30.543316Z","logger":"client","caller":"v3/maintenance.go:236","msg":"opened snapshot stream; downloading"}
+{"level":"info","ts":"2026-11-07T21:50:30.652127Z","caller":"snapshot/v3_snapshot.go:96","msg":"fetching snapshot","endpoint":"127.0.0.1:18085"}
+{"level":"info","ts":"2026-11-07T21:50:30.652867Z","logger":"client","caller":"v3/maintenance.go:302","msg":"completed snapshot read; closing"}
+{"level":"info","ts":"2026-11-07T21:50:30.718315Z","caller":"snapshot/v3_snapshot.go:111","msg":"fetched snapshot","endpoint":"127.0.0.1:18085","size":"25 kB","took":"179.707861ms","etcd-version":"3.7.0"}
+{"level":"info","ts":"2026-11-07T21:50:30.718594Z","caller":"snapshot/v3_snapshot.go:121","msg":"saved","path":"snapshots/lab-snapshot.db"}
+Snapshot saved at snapshots/lab-snapshot.db
+Server version 3.7.0
+
+$ ls -lh snapshots/
+total 28K
+-rw------- 1 root root 25K Nov  7 21:50 lab-snapshot.db
+
+$ etcdutl snapshot status snapshots/lab-snapshot.db --write-out=table
+┌──────────┬──────────┬────────────┬────────────┬─────────┐
+│   HASH   │ REVISION │ TOTAL KEYS │ TOTAL SIZE │ VERSION │
+├──────────┼──────────┼────────────┼────────────┼─────────┤
+│ 4db478b7 │       17 │          3 │      25 kB │   3.7.0 │
+└──────────┴──────────┴────────────┴────────────┴─────────┘
+
+$ etcdutl snapshot restore into a fresh data directory (not started)
+2026-11-07T21:50:31Z	info	membership/cluster.go:408	added member	{"cluster-id": "39dbe904f3562de4", "local-member-id": "0", "added-peer-id": "3fd60f2804cfb79c", "added-peer-peer-urls": ["http://127.0.0.1:18186"], "added-peer-is-learner": false}
+2026-11-07T21:50:31Z	info	membership/cluster.go:408	added member	{"cluster-id": "39dbe904f3562de4", "local-member-id": "0", "added-peer-id": "cdcfd8c055b0177a", "added-peer-peer-urls": ["http://127.0.0.1:18187"], "added-peer-is-learner": false}
+2026-11-07T21:50:31Z	info	bbolt	backend/backend.go:213	Opening db file (data-restored/m1.etcd/member/snap/db) with mode -rw------- and with options: {Timeout: 0s, NoGrowSync: false, NoFreelistSync: true, PreLoadFreelist: false, FreelistType: , ReadOnly: false, MmapFlags: 8000, InitialMmapSize: 10737418240, PageSize: 0, MaxSize: 0, NoSync: false, OpenFile: 0x0, Mlock: false, Logger: 0x3c78eb602140, NoStatistics: false}
+2026-11-07T21:50:31Z	info	bbolt	bbolt@v1.5.0/db.go:327	Opening bbolt db (data-restored/m1.etcd/member/snap/db) successfully
+2026-11-07T21:50:31Z	info	snapshot/v3_snapshot.go:334	restored snapshot	{"path": "snapshots/lab-snapshot.db", "wal-dir": "data-restored/m1.etcd/member/wal", "data-dir": "data-restored/m1.etcd", "snap-dir": "data-restored/m1.etcd/member/snap", "initial-memory-map-size": 10737418240}
+
+$ find data-restored -type f | head
+data-restored/m1.etcd/member/snap/db
+data-restored/m1.etcd/member/snap/0000000000000001-0000000000000003.snap
+data-restored/m1.etcd/member/wal/0000000000000000-0000000000000000.wal

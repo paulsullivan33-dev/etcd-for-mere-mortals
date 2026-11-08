@@ -1,0 +1,30 @@
+site_name: etcd for Mere Mortals
+site_description: A small store that several machines agree on. Bringing up a three member cluster, putting and getting keys, watches, leases, losing members on purpose, snapshots, and knowing what a coordination store will not do.
+site_url: https://paulsullivan33-dev.github.io/etcd-for-mere-mortals/
+copyright: 'Part of <a href="https://paulsullivan33-dev.github.io/mere-mortals/">For Mere Mortals</a> · Text <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, code MIT'
+
+# Guides live at the repo root (nice for GitHub browsing).
+# The deploy workflow copies them into docs/ before building.
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - What etcd Is: what-etcd-is.md
+  - The Moving Parts: the-moving-parts.md
+  - Installing etcd: installing-etcd.md
+  - Bringing Up a Cluster: bringing-up-a-cluster.md
+  - Putting, Getting and Deleting: putting-getting-deleting.md
+  - Prefix Reads: prefix-reads.md
+  - Watching Keys: watching-keys.md
+  - Leases and Heartbeats: leases-and-heartbeats.md
+  - Quorum, Measured: quorum-measured.md
+  - Membership and Leadership: membership-and-leadership.md
+  - Snapshots and Restore: snapshots-and-restore.md
+  - Compaction and Defragmentation: compaction-and-defragmentation.md
+  - Real Jobs: real-jobs.md
+  - The Neighbours: the-neighbours.md
+  - Limits: limits.md
+  - Troubleshooting: troubleshooting.md
+  - Glossary: glossary.md
+  - Writing Criteria: criteria.md

@@ -1,0 +1,77 @@
+$ put three fictional services registering themselves
+$ etcdctl put services/web-frontend/endpoint frontend-01.example.test:8080
+OK
+$ etcdctl put services/cache/endpoint cache-01.example.test:6379
+OK
+$ etcdctl put services/billing-worker/endpoint worker-01.example.test:9000
+OK
+
+$ get one key
+services/web-frontend/endpoint
+frontend-01.example.test:8080
+
+$ get one key as JSON (revisions visible)
+{
+    "header": {
+        "cluster_id": 4169182087533178340,
+        "member_id": 4599880733959370652,
+        "revision": 4,
+        "raft_term": 2
+    },
+    "kvs": [
+        {
+            "key": "c2VydmljZXMvd2ViLWZyb250ZW5kL2VuZHBvaW50",
+            "create_revision": 2,
+            "mod_revision": 2,
+            "version": 1,
+            "value": "ZnJvbnRlbmQtMDEuZXhhbXBsZS50ZXN0OjgwODA="
+        }
+    ],
+    "count": 1
+}
+
+$ overwrite the same key, then get -w json again
+OK
+{
+    "header": {
+        "cluster_id": 4169182087533178340,
+        "member_id": 4599880733959370652,
+        "revision": 5,
+        "raft_term": 2
+    },
+    "kvs": [
+        {
+            "key": "c2VydmljZXMvd2ViLWZyb250ZW5kL2VuZHBvaW50",
+            "create_revision": 2,
+            "mod_revision": 5,
+            "version": 2,
+            "value": "ZnJvbnRlbmQtMDIuZXhhbXBsZS50ZXN0OjgwODA="
+        }
+    ],
+    "count": 1
+}
+
+$ prefix read: get --prefix services/
+services/billing-worker/endpoint
+worker-01.example.test:9000
+services/cache/endpoint
+cache-01.example.test:6379
+services/web-frontend/endpoint
+frontend-02.example.test:8080
+
+$ prefix read sorted, keys only
+services/billing-worker/endpoint
+
+services/cache/endpoint
+
+services/web-frontend/endpoint
+
+
+$ delete services/cache/endpoint
+1
+$ get it again (no output means no key)
+(exit 0)
+
+$ ask a DIFFERENT member (m3 endpoint only) for the surviving key
+services/billing-worker/endpoint
+worker-01.example.test:9000

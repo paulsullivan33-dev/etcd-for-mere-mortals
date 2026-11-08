@@ -1,0 +1,20 @@
+$ leader before the move (endpoint status, IS LEADER column)
+127.0.0.1:18085 (m1) was leader, raft term 4; m2 and m3 followers.
+
+$ etcdctl move-leader 0xcdcfd8c055b0177a     (m3's ID, with a 0x prefix)
+Error: strconv.ParseUint: parsing "0xcdcfd8c055b0177a": invalid syntax
+
+$ etcdctl move-leader 14830310418537256826   (the same ID in decimal)
+Error: strconv.ParseUint: parsing "14830310418537256826": value out of range
+
+$ etcdctl move-leader cdcfd8c055b0177a       (hex, no prefix — the form it wants)
+Leadership transferred from 129ffdbf00b38533 to cdcfd8c055b0177a
+
+$ etcdctl endpoint status -w table   (after the move)
+127.0.0.1:18085  m1  IS LEADER false  RAFT TERM 5  RAFT INDEX 59
+127.0.0.1:18086  m2  IS LEADER false  RAFT TERM 5  RAFT INDEX 59
+127.0.0.1:18087  m3  IS LEADER true   RAFT TERM 5  RAFT INDEX 59
+
+The term rose from 4 to 5 for the transfer, and all three members
+agreed on raft index 59 afterwards — the new leader holds exactly
+the same history as the old one.

@@ -1,0 +1,80 @@
+etcd — the distilled commands
+====================================================================
+Placeholders: <key>, <value>, <id> are yours.
+EP3 means --endpoints=127.0.0.1:18085,127.0.0.1:18086,127.0.0.1:18087
+Every command below is one the lab ran (transcripts in
+etcd-lab/transcripts/) or names as documented-only in the guide.
+
+THE CLUSTER (chapters 3-4)
+--------------------------------------------------------------------
+  etcd --version                   # the check every install
+  etcdctl version                  # must pass; etcdutl too
+  ./start-cluster.sh               # lab script: 3 members up,
+                                   # waits for health
+  etcdctl EP3 member list -w table # the roster: names, IDs,
+                                   # peer + client addresses
+  etcdctl EP3 endpoint status -w table
+                                   # version, DB size, quota,
+                                   # IS LEADER, raft term + index
+  etcdctl EP3 endpoint health      # healthy = a proposal was
+                                   # committed, not just a ping
+
+KEYS (chapters 5-6)
+--------------------------------------------------------------------
+  etcdctl EP3 put <key> <value>    # OK means a majority holds it
+  etcdctl EP3 get <key>            # key, then value; empty and
+                                   # exit 0 when the key is absent
+  etcdctl EP3 get <key> -w json    # revisions: header revision,
+                                   # create/mod revisions, version
+  etcdctl EP3 get --prefix services/
+                                   # a whole branch, in key order
+  etcdctl EP3 get --prefix services/ --keys-only
+  etcdctl EP3 del <key>            # answers the count removed
+
+WATCH (chapter 7)
+--------------------------------------------------------------------
+  etcdctl --endpoints=127.0.0.1:18085 watch <key>
+                                   # prints PUT/DELETE events as
+                                   # other commands change the key
+  etcdctl ... watch --prefix services/
+                                   # the whole branch (documented
+                                   # pairing: read first, then watch)
+
+LEASES (chapter 8)
+--------------------------------------------------------------------
+  etcdctl lease grant 30           # prints the lease ID
+  etcdctl put <key> <value> --lease=<id>
+  etcdctl lease timetolive <id> --keys
+                                   # remaining time + attached keys
+  etcdctl lease revoke <id>        # attached keys die at once
+  etcdctl lease keep-alive <id>    # renewals (documented-only in
+                                   # this guide; expiry was timed)
+
+QUORUM (chapter 9) — outcomes, not just commands
+--------------------------------------------------------------------
+  3 of 3 up    put OK, get OK
+  2 of 3 up    put OK (measured 95ms), get OK
+  1 of 3 up    put AND get fail: Error: context deadline exceeded
+
+MEMBERSHIP (chapter 10)
+--------------------------------------------------------------------
+  etcdctl EP3 move-leader cdcfd8c055b0177a
+                                   # ID as member list prints it:
+                                   # hex, NO 0x prefix, not decimal
+
+SNAPSHOTS (chapter 11)
+--------------------------------------------------------------------
+  etcdctl --endpoints=127.0.0.1:18085 snapshot save snap.db
+  etcdutl snapshot status snap.db --write-out=table
+  etcdutl snapshot restore snap.db --data-dir <dir> --name m1 \
+    --initial-cluster <cluster> --initial-cluster-token <token> \
+    --initial-advertise-peer-urls http://127.0.0.1:18185
+
+HISTORY (chapter 12)
+--------------------------------------------------------------------
+  etcdctl EP3 get <key> --rev=<n>  # the past, while it lasts
+  etcdctl EP3 compact <revision>   # history at/below it is gone:
+                                   # old reads fail "required
+                                   # revision has been compacted"
+  etcdctl EP3 defrag               # give the freed space back;
+                                   # watch DB SIZE in endpoint status
